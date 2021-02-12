@@ -11,17 +11,20 @@ from skimage import io
 import skimage
 import matplotlib.pyplot as plt
 import numpy as np
+import functions
 
 
 # m = tf.keras.Sequential([
 #     hub.KerasLayer("https://tfhub.dev/google/imagenet/mobilenet_v2_100_224/classification/4")
 # ])
 # m.build([None, 224, 224, 3])  # Batch input shape.
+
 # m = tf.keras.Sequential([
-#    hub.KerasLayer("https://tfhub.dev/google/tf2-preview/mobilenet_v2/feature_vector/4", output_shape=[1280],
-#                   trainable=False),  # Can be True, see below.
+#     hub.KerasLayer("https://tfhub.dev/google/tf2-preview/mobilenet_v2/feature_vector/4", output_shape=[1280],
+#                    trainable=False),  # Can be True, see below.
 # ])
 # m.build([None, 224, 224, 3])  # Batch input shape.
+
 # m = tf.keras.Sequential([
 #     hub.KerasLayer("https://tfhub.dev/google/imagenet/inception_v3/feature_vector/4",
 #                    trainable=False),  # Can be True, see below.
@@ -55,6 +58,7 @@ m.build([None, 299, 299, 3])  # Batch input shape.
 # In[3]:
 
 
+print("About model: ")
 print(m.summary())
 
 
@@ -66,7 +70,7 @@ images = io.imread_collection("data/RGB/Resized_299/*.jpeg")
 
 # In[5]:
 
-print("Images are loaded...")
+
 #print(images)
 
 
@@ -81,16 +85,10 @@ for image in images:
 # In[7]:
 
 
-#type(image_set)
-
-
-# In[8]:
-
-
 image_set = np.array(image_set)
 
 
-# In[9]:
+# In[8]:
 
 
 print("Image set shape = {}".format(image_set.shape))
@@ -104,116 +102,193 @@ print("Image set shape = {}".format(image_set.shape))
 
 # ### Some Euclidian Distance Application
 
-# In[10]:
+# In[9]:
 
 
 predictions = m.predict(image_set)
 
 
-# In[11]:
+# In[10]:
 
 
-print("Shape of our feature vector set = {}".format(predictions.shape))
+print("Prediction shape = {}".format(predictions.shape))
 
 
+# ----
 
 # # PCA Application
 
+# In[11]:
 
 
+from sklearn.decomposition import PCA
+from mpl_toolkits.mplot3d import Axes3D
 
-# In[19]:
+
+# In[12]:
+
+
+X = predictions.copy()
+
+
+# In[13]:
+
+
+pca = PCA(n_components=2)
+pca.fit(X)
+
+
+# In[14]:
+
+
+print("PCA variance ration = {}".format(pca.explained_variance_ratio_))
+#print(pca.singular_values_)
+
+
+# In[15]:
+
+
+X_pca = pca.transform(X)
+
+
+# In[16]:
+
+
+X_pca.shape
+
+
+# fig = plt.figure(1, figsize=(10,10))
+# ax = Axes3D(fig)
+# ax.scatter3D(X_pca[:,0], X_pca[:,1], X_pca[:,2])
+# plt.show()
+
+# In[17]:
+
+
+plt.scatter(X_pca[:,0], X_pca[:,1])
+
+
+# # Dİmension Reduced Data for Clustering
+
+# In[92]:
 
 
 from sklearn.decomposition import PCA
 
-# In[20]:
+
+# In[93]:
+
 
 X = predictions.copy()
-
-# In[21]:
-
-pca = PCA(n_components=10)
-pca.fit(X)
-
-# In[22]:
-
-
-print("Firts PCA Variance Ratios = {}".format(pca.explained_variance_ratio_))
-#print(pca.singular_values_)
-
-# In[23]:
-
-
-X_cluster_data = pca.transform(X)
-
-
-# In[24]:
-
-
-print("Data shape after PCA = {}".format(X_cluster_data.shape))
-
-
-# -----
-
-# ### Let's use StandartScalar to improve PCA ( It is not useful.)
-from sklearn.preprocessing import StandardScalerscaler = StandardScaler()
-scaler.fit(X)
-X_scaled = scaler.transform(X)print(X_scaled)scaled_pca = PCA(n_components=2)
-scaled_pca.fit(X_scaled)print(scaled_pca.explained_variance_ratio_)
-print(scaled_pca.singular_values_)
-# X_scaled_pca = scaled_pca.transform(X)
-plt.scatter(X_scaled_pca[:29,0], X_scaled_pca[:29,1], cmap="gray")
-plt.scatter(X_scaled_pca[29:48,0], X_scaled_pca[29:48,1], cmap="gray")
-plt.scatter(X_scaled_pca[48:,0], X_scaled_pca[48:,1], cmap="gray")
-# ### Let's use non-linear dimension reduction 
-from sklearn.decomposition import KernelPCAtransformer = KernelPCA(n_components=2, kernel="cosine")
-transformer.fit(X)
-X_transformed = transformer.transform(X)X_transformed.shapeplt.scatter(X_transformed[:,0], X_transformed[:,1])
-# # Clustering
-
-# In[25]:
-
-
-from sklearn.cluster import KMeans
-
-
-# In[26]:
-
-
-kmeans = KMeans(n_clusters=3)
-kmeans.fit(X_cluster_data)
-
-
-# In[27]:
-
-
-label = kmeans.labels_
-print(label)
-
-f , ax = plt.subplots()
-ax.scatter(X_pca[np.where(label == 0)][:,0], X_pca[np.where(label == 0)][:,1], edgecolors="r")
-ax.scatter(X_pca[np.where(label == 1)][:,0], X_pca[np.where(label == 1)][:,1], cmap="gray")
-ax.scatter(X_pca[np.where(label == 2)][:,0], X_pca[np.where(label == 2)][:,1], cmap="gray")
-# In[28]:
-
-
-kmeans.cluster_centers_.shape
-
-
-# In[29]:
-
-
-dist = kmeans.transform(X_cluster_data)
 
 
 # In[94]:
 
 
-dist[50]
+pca = PCA(n_components=10)
+pca.fit(X)
 
 
-# In[30]:
+# In[95]:
+
+
+print("PCA variance ratio = {}".format(pca.explained_variance_ratio_))
+#print(pca.singular_values_)
+
+
+# In[96]:
+
+
+X_cluster_data = pca.transform(X)
+
+
+# In[97]:
+
+
+print("Dimension Reduced Data shape = {}".format(X_cluster_data.shape))
+
+
+# -----
+
+# ### Let's use StandartScalar to improve PCA ( It is not useful.)
+
+# from sklearn.preprocessing import StandardScaler
+
+# scaler = StandardScaler()
+# scaler.fit(X)
+# X_scaled = scaler.transform(X)
+
+# print(X_scaled.shape)
+
+# scaled_pca = PCA(n_components=2)
+# scaled_pca.fit(X_scaled)
+
+# print(scaled_pca.explained_variance_ratio_)
+# print(scaled_pca.singular_values_)
+
+# X_scaled_pca = scaled_pca.transform(X)
+
+# plt.scatter(X_scaled[:,0], X_scaled[:,1])
+
+# ### Let's use non-linear dimension reduction 
+
+# from sklearn.decomposition import KernelPCA
+
+# transformer = KernelPCA(n_components=2, kernel="cosine")
+# transformer.fit(X)
+# X_transformed = transformer.transform(X)
+
+# X_transformed.shape
+
+# plt.scatter(X_transformed[:,0], X_transformed[:,1])
+
+# # Clustering
+
+# In[98]:
+
+
+from sklearn.cluster import KMeans
+
+
+# In[99]:
+
+
+active_cluster_number = 3
+print("Active Cluster Number = {}".format(active_cluster_number))
+
+
+# In[100]:
+
+
+kmeans = KMeans(n_clusters=active_cluster_number)
+kmeans.fit(X_cluster_data)
+
+
+# In[101]:
+
+
+label = kmeans.labels_
+print(label)
+
+
+# f , ax = plt.subplots()
+# ax.scatter(X_pca[np.where(label == 0)][:,0], X_pca[np.where(label == 0)][:,1], edgecolors="r")
+# ax.scatter(X_pca[np.where(label == 1)][:,0], X_pca[np.where(label == 1)][:,1], cmap="gray")
+# ax.scatter(X_pca[np.where(label == 2)][:,0], X_pca[np.where(label == 2)][:,1], cmap="gray")
+
+# In[28]:
+
+
+#kmeans.cluster_centers_.shape
+
+
+# In[102]:
+
+
+dist = kmeans.transform(X_cluster_data)
+
+
+# In[103]:
 
 
 min_dist = []
@@ -221,15 +296,18 @@ for ele in dist:
     min_dist.append(min(ele))
 
 
-# In[31]:
+# In[104]:
 
 
-print(min_dist)
+min_dist.sort()
+#print(min_dist)
+length = min_dist[-5]
+print("Estimated Circular Distance = {}".format(length))
 
 
 # - We can say that, length have to be smaller than 13.
 
-# In[32]:
+# In[105]:
 
 
 def IsMemberofCluster(feature_data, kmeans = kmeans):
@@ -242,10 +320,10 @@ def IsMemberofCluster(feature_data, kmeans = kmeans):
     imc = []
         
     distances = kmeans.transform(feature_data)
-    print(distances)
+    #print(distances)
     
     for vector in distances:
-        if np.all(vector > 40):
+        if np.all(vector > length):
             imc.append(False)
             continue
         imc.append(True)
@@ -253,93 +331,55 @@ def IsMemberofCluster(feature_data, kmeans = kmeans):
     return imc
 
 
-# In[42]:
+# -----
 
+# imgs = io.imread_collection("test/test299/image_0.jpeg")
 
-imgs = io.imread_collection("test/test299/image_0.jpeg")
+# print(imgs)
 
+# test_imgs = []
+# for img in imgs:
+#     test_imgs.append(img.astype("float32"))
 
-# In[43]:
+# test_imgs = np.array(test_imgs)
+# test_imgs.shape
 
+# test_features = m.predict(test_imgs)
 
-print(imgs)
+# test_features[-1]
 
+# pca.explained_variance_ratio_
 
-# In[44]:
+# test_feature_data = pca.transform(test_features)
 
+# print(test_features[-1])
 
-test_imgs = []
-for img in imgs:
-    test_imgs.append(img.astype("float32"))
+# pca.explained_variance_ratio_
 
+# label = IsMemberofCluster(test_feature_data)
 
-# In[45]:
-
-
-test_imgs = np.array(test_imgs)
-test_imgs.shape
-
-
-# In[37]:
-
-
-test_features = m.predict(test_imgs)
-
-
-# In[38]:
-
-
-test_features[-1]
-
-
-# In[107]:
-
-
-pca.explained_variance_ratio_
-
-
-# In[39]:
-
-
-test_feature_data = pca.transform(test_features)
-
-
-# In[109]:
-
-
-print(test_features[-1])
-
-
-# In[40]:
-
-
-pca.explained_variance_ratio_
-
-
-# In[41]:
-
-
-label = IsMemberofCluster(test_feature_data)
-
-
-# In[112]:
-
-
-print(label)
-
+# print(label)
 
 # -----
 
 # # Let's Add New Cluster
 
-# In[52]:
+# In[113]:
+
+
+imag_list = functions.Grab_and_parse()
+plt.imshow(imag_list[0])
+
+
+# In[114]:
 
 
 ### Main Add Cluster###
 
 # let's select new image that is not in any cluster.
 
-imag = io.imread("test/test299/image_0.jpeg")
+#imag = io.imread("test/test299/image_6.jpeg")
+imag = imag_list[0]
 imag = imag.astype("float32")
 imag1 = skimage.transform.rotate(imag,90)
 imag2 = skimage.transform.rotate(imag,180)
@@ -348,18 +388,17 @@ imag3 = skimage.transform.rotate(imag,270)
 image_list = [imag, imag1, imag2, imag3]
 
 
-# In[53]:
+# In[115]:
 
 
 # Let's prepare list to model
 image_list = np.array(image_list)
-
 # Let's use model to extract feature vector
 image_features = m.predict(image_list)
-image_features.shape
+#image_features.shape
 
 
-# In[54]:
+# In[116]:
 
 
 # Now let's reduce their dimensions with PCA model.
@@ -367,10 +406,10 @@ pca_image_features = pca.transform(image_features)
 
 # Lets check are they member of any cluster?
 flags = IsMemberofCluster(pca_image_features, kmeans=kmeans)
-print(flags)
+print("Cluster flags = {}".format(flags))
 
 
-# In[49]:
+# In[121]:
 
 
 if np.any(flags):
@@ -382,36 +421,51 @@ if np.any(flags):
     
     cluster = kmeans.predict(pca_image_features[index].reshape(1,-1))
     print("This image is in {} cluster".format(cluster))
+    
+    l = list(kmeans.labels_)
+    times = l.count(cluster)
+    #print(times)
+    if times < 10:
+        X = np.concatenate((X,image_features),axis=0)
+        print("It is in Cluster but still new!")
+        pca = PCA(n_components=10)
+        pca.fit(X)
+        X_cluster_data = pca.transform(X)
+        times = times + 4
+        kmeans = KMeans(n_clusters=active_cluster_number)
+        kmeans.fit(X_cluster_data)
+        
 
 
-# In[50]:
-
-
-X = np.concatenate((X,image_features),axis=0)
-X.shape
-
-
-# In[51]:
+# In[111]:
 
 
 flags = np.array(flags)
 if np.all(flags == False):
     # In this case, we have to think new cluster.
-    
+    active_cluster_number = active_cluster_number + 1 
+    X = np.concatenate((X,image_features),axis=0)
+    #X.shape
     
     # Firstly, update PCA.
     pca = PCA(n_components=10)
     pca.fit(X)
-    print(pca.explained_variance_ratio_)
-    print(pca.singular_values_)
+    #print(pca.explained_variance_ratio_)
+    #print(pca.singular_values_)
     X_cluster_data = pca.transform(X)
     
     # Fit new kmean.
-    kmeans = KMeans(n_clusters=5)
+    kmeans = KMeans(n_clusters=active_cluster_number)
     kmeans.fit(X_cluster_data)
     label = kmeans.labels_
-    print(label)
+    print("Cluster label = {}".format(label))
     
     
     # Find new cluster
+
+
+# In[112]:
+
+
+print("Active Cluster Number = {}".format(active_cluster_number))
 
