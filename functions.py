@@ -20,7 +20,7 @@ import matplotlib.patches as mpatches
 
 pygame.camera.init()
 #print(pygame.camera.list_cameras()) #Camera detected or not
-cam = pygame.camera.Camera("/dev/video2",(1920,1080))
+cam = pygame.camera.Camera("/dev/video0",(1920,1080))
 
 
 # In[4]:
@@ -103,8 +103,14 @@ def Grab_and_parse():
     img = Grab_photo()
     #img = skimage.io.imread("data/a10.jpg")
     img_list = Image_parser(img)
+    resized_img = []
+    for image in img_list:
+        new_image = skimage.transform.resize(image, (299,299))
+        resized_img.append(new_image)
+        
     #f , ax = plt.subplots(nrows=1, ncols=len(img_list), figsize = (10,10))
     #for i, image in enumerate(img_list):
         #ax[i].imshow(image)
-    return img_list
+    print(resized_img[0].shape)
+    return resized_img
 
